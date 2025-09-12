@@ -1,0 +1,45 @@
+.features-section {
+  background: #fff;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #007bff, #28a745);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.feature-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 25px 20px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.icon-box {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.explore-btn {
+  background: linear-gradient(90deg, #007bff, #28a745);
+  border: none;
+  border-radius: 50px;
+  padding: 10px 25px;
+  font-weight: 600;
+}
+
+.explore-btn:hover {
+  opacity: 0.9;
+}

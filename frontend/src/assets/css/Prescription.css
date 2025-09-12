@@ -1,0 +1,70 @@
+/* Container that owns the pseudo “extra sheets” */
+.prescription-stack {
+  position: relative;
+  width: 420px; /* matches card width */
+}
+
+/* hidden extra papers (show only on hover) */
+.prescription-stack::before,
+.prescription-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  border: 2px solid #b6b6b6;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  opacity: 0;
+  transform: scale(.98) rotate(-2deg) translate(6px, 8px);
+  transition: opacity .25s ease, transform .25s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.prescription-stack::after {
+  transform: scale(.96) rotate(3deg) translate(16px, 18px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+
+/* reveal on hover */
+.prescription-stack:hover::before,
+.prescription-stack:hover::after {
+  opacity: 1;
+}
+
+/* Main card */
+.prescription-card {
+  position: relative;
+  z-index: 1; /* above extra sheets */
+  width: 100%;
+  background: #fff;
+  border: 2px solid #b6b6b6;
+  border-radius: 12px;
+  padding: 20px;
+  font-family: "Times New Roman", serif;
+  box-shadow: 0 8px 22px rgba(0,0,0,.22);
+  transition: transform .28s ease, box-shadow .28s ease;
+}
+
+/* Hover lift/tilt */
+.prescription-stack:hover .prescription-card {
+  transform: translateY(-10px) rotate(-1deg) scale(1.02);
+  box-shadow: 0 16px 32px rgba(0,0,0,.28);
+}
+
+/* Divider */
+hr {
+  border-top: 1px solid #cfe0ff;
+  opacity: 1;
+}
+
+/* Signature */
+.signature-line {
+  border-bottom: 1px solid #bdbdbd;   /* no underscores */
+  height: 2px;
+  margin: 0 0 6px 0;
+}
+.signature-text {
+  font-family: "Brush Script MT", "Segoe Script", "Comic Sans MS", cursive;
+  font-size: 1.25rem;
+  margin: 0;
+}
