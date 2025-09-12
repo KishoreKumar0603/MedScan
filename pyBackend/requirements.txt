@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pillow
+opencv-python
+easyocr
+fuzzywuzzy
+python-Levenshtein

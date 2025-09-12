@@ -54,9 +54,9 @@ const Navbar = () => {
 
             {/* About Page */}
             <li className="nav-item ms-3">
-              <a className="nav-link" href="#about-section">
+              <Link className="nav-link" to="/about">
                 About
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

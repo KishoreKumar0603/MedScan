@@ -193,3 +193,36 @@
   background-size: contain;
   cursor: pointer;
 }
+
+
+
+
+.upload-card {
+  width: 520px;
+  height: 260px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  border: 3px dashed #e0dede;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden; /* important: prevent image overflow */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+.preview-img {
+  max-width: 100%;   /* fills width without overflow */
+  max-height: 100%;  /* fills height without overflow */
+  object-fit: contain; /* maintain aspect ratio */
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 600px) {
+  .upload-card {
+    width: 90%;
+    height: 200px;
+  }
+}
