@@ -1,7 +1,6 @@
 fastapi
-uvicorn
-pillow
-opencv-python
-easyocr
-fuzzywuzzy
-python-Levenshtein
+uvicorn[standard]
+transformers
+torch
+Pillow
+python-multipart
