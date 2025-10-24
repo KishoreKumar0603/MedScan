@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import axios from "axios";
 import "../assets/css/PrescriptionUpload.css";
 
 export default function PrescriptionUpload() {
@@ -29,27 +30,38 @@ export default function PrescriptionUpload() {
   const handleFileChange = (e) => onFile(e.target.files && e.target.files[0]);
   const handleDrop = (e) => {
     e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files[0])
+      onFile(e.dataTransfer.files[0]);
   };
   const handleDragOver = (e) => e.preventDefault();
 
-  const handleUpload = () => {
+
+  const handleUpload = async () => {
     if (!file) return;
     setLoading(true);
     setResult(null);
 
-    // simulate API call
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(
+        "http://localhost:3000/upload-prescription", // Node.js backend endpoint
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setResult(response.data); // response from Python FastAPI via Node.js
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload prescription. Try again.");
+    } finally {
       setLoading(false);
-      setResult({
-        patient: "John Doe",
-        age: 34,
-        medicines: [
-          { name: "Paracetamol", dose: "500mg", freq: "2x/day" },
-          { name: "Amoxicillin", dose: "250mg", freq: "3x/day" },
-        ],
-      });
-    }, 2000);
+    }
   };
 
   const handleCopy = async () => {
@@ -61,7 +73,9 @@ export default function PrescriptionUpload() {
         text = JSON.stringify(result, null, 2);
         break;
       case "table":
-        text = result.medicines.map((m) => `${m.name} | ${m.dose} | ${m.freq}`).join("\n");
+        text = result.medicines
+          .map((m) => `${m.name} | ${m.dose} | ${m.freq}`)
+          .join("\n");
         break;
       case "sql":
         text = result.medicines
@@ -196,26 +210,34 @@ export default function PrescriptionUpload() {
                 <div>
                   {/* Icons for view options */}
                   <i
-                    className={`bi bi-braces mx-2 ${view === "json" ? "text-primary" : ""}`}
+                    className={`bi bi-braces mx-2 ${
+                      view === "json" ? "text-primary" : ""
+                    }`}
                     role="button"
                     title="JSON"
                     onClick={() => setView("json")}
                   />
                   <i
-                    className={`bi bi-table mx-2 ${view === "table" ? "text-primary" : ""}`}
+                    className={`bi bi-table mx-2 ${
+                      view === "table" ? "text-primary" : ""
+                    }`}
                     role="button"
                     title="Table"
                     onClick={() => setView("table")}
                   />
                   <i
-                    className={`bi bi-database mx-2 ${view === "sql" ? "text-primary" : ""}`}
+                    className={`bi bi-database mx-2 ${
+                      view === "sql" ? "text-primary" : ""
+                    }`}
                     role="button"
                     title="SQL"
                     onClick={() => setView("sql")}
                   />
                   {/* MongoDB icon as inline SVG */}
                   <span
-                    className={`mongo-icon mx-2 ${view === "mongo" ? "text-primary" : ""}`}
+                    className={`mongo-icon mx-2 ${
+                      view === "mongo" ? "text-primary" : ""
+                    }`}
                     role="button"
                     title="MongoDB"
                     onClick={() => setView("mongo")}
@@ -233,7 +255,9 @@ export default function PrescriptionUpload() {
                 </div>
 
                 <button
-                  className={`btn btn-sm btn-outline-secondary ${copied ? "btn-success" : ""}`}
+                  className={`btn btn-sm btn-outline-secondary ${
+                    copied ? "btn-success" : ""
+                  }`}
                   onClick={handleCopy}
                 >
                   {copied ? "Copied!" : "Copy"}
