@@ -1,18 +1,24 @@
-import express, { raw } from "express";
+import express from "express";
 import cors from "cors";
 import multer from "multer";
-import axios from "axios";
 import fs from "fs";
-import FormData from "form-data";
 import path from "path";
+import dotenv from "dotenv";
+dotenv.config();
+
+
+import { runOcrEngine } from "./core/ocrEngine.js";
+import { extractMedicalEntities } from "./core/medicalExtractor.js";
+
 
 const app = express();
 const PORT = 5000;
 
 app.use(cors({
   origin: "http://localhost:5173",
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST"]
 }));
+
 app.use(express.json());
 
 const upload = multer({ dest: "uploads/" });
@@ -22,29 +28,30 @@ app.post("/api/upload-prescription", upload.single("file"), async (req, res) => 
     return res.status(400).json({ success: false, error: "No file uploaded" });
   }
 
+  const filePath = req.file.path;
+
   try {
-    const filePath = req.file.path;
     console.log("Uploaded file path:", filePath);
 
-    const form = new FormData();
-    form.append("file", fs.createReadStream(filePath));
+    const rawText = await runOcrEngine(filePath);
+    console.log("Extracted raw text:", rawText);
 
-    const response = await axios.post("http://localhost:8000/ocr", form, {
-      headers: form.getHeaders(),
-      maxBodyLength: Infinity,
+    const extracted = await extractMedicalEntities(rawText);
+    console.log("Extracted medical entities:", extracted);
+
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    return res.json({
+      patient_name: extracted.patient_name || null,
+      medicines: extracted.medicines || [],
+      raw_text: rawText || "",
     });
 
-    fs.unlinkSync(filePath);
-
-    res.json({
-      patient_name: response.data.patient_name || null,
-      medicines: response.data.medicines || [],
-      raw_text: response.data.raw_text || "",
-    });
   } catch (err) {
-    console.error("OCR error:", err.message);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("OCR/NLP error:", err.message);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    return res.status(500).json({ success: false, error: "Processing failed" });
   }
 });
 
@@ -58,16 +65,18 @@ app.post("/api/saveResult", async (req, res) => {
     const filename = `result_${Date.now()}.json`;
     fs.writeFileSync(path.join(saveDir, filename), JSON.stringify(data, null, 2));
 
+    res.json({ success: true, message: "Saved successfully" });
+
   } catch (err) {
     console.error("Save error:", err.message);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: "Save failed" });
   }
 });
 
 app.get("/", (req, res) => {
-  res.send("✅ MedScan Node.js API is running 🚀");
+  res.send("MedScan Node.js API is running 🚀");
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ MedScan Node.js server running at http://localhost:${PORT}`);
+  console.log(`MedScan Node server running at http://localhost:${PORT}`);
 });
