@@ -1,6 +1,6 @@
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';// JS for dropdowns
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Root from './Layouts/Root';
 import RestAPI from "./Components/RestAPI";
 import APIDocs from "./Components/APIDocs";

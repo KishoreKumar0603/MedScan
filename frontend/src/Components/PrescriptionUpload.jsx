@@ -12,9 +12,6 @@ export default function PrescriptionUpload() {
   const [copied, setCopied] = useState(false);
   const inputRef = useRef(null);
 
-  // ----------------------------
-  // 🔹 Preview handler
-  // ----------------------------
   useEffect(() => {
     if (!file) {
       setPreview(null);
@@ -33,9 +30,6 @@ export default function PrescriptionUpload() {
   };
   const handleDragOver = (e) => e.preventDefault();
 
-  // ----------------------------
-  // 🔹 Upload Prescription → Node → FastAPI
-  // ----------------------------
   const handleUpload = async () => {
     if (!file) return alert("Please select a prescription image first.");
     setLoading(true);
@@ -46,11 +40,11 @@ export default function PrescriptionUpload() {
       formData.append("file", file);
 
       const response = await axios.post(
-        "http://localhost:5000/api/upload-prescription", // ✅ updated endpoint
+        "http://localhost:5000/api/upload-prescription",
         formData,
       );
 
-      setResult(response.data); // response from Node (which calls FastAPI)
+      setResult(response.data);
     } catch (err) {
       console.error("Upload error:", err);
       alert("Failed to upload or process prescription. Please try again.");
@@ -59,14 +53,11 @@ export default function PrescriptionUpload() {
     }
   };
 
-  // ----------------------------
-  // 🔹 Save OCR Result (optional)
-  // ----------------------------
   const handleSave = async () => {
     if (!result) return alert("No result to save!");
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/saveResult", // ✅ updated endpoint
+        "http://localhost:5000/api/saveResult",
         result,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -77,9 +68,6 @@ export default function PrescriptionUpload() {
     }
   };
 
-  // ----------------------------
-  // 🔹 Copy to clipboard
-  // ----------------------------
   const handleCopy = async () => {
     if (!result) return;
 
@@ -118,7 +106,6 @@ export default function PrescriptionUpload() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback for unsupported browsers
       const textarea = document.createElement("textarea");
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -130,9 +117,6 @@ export default function PrescriptionUpload() {
     }
   };
 
-  // ----------------------------
-  // 🔹 UI Rendering
-  // ----------------------------
   return (
     <div className="prescription-page">
       <div className="floating-title">Upload Prescription here,</div>
