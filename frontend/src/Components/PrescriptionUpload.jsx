@@ -12,6 +12,7 @@ export default function PrescriptionUpload() {
   const [copied, setCopied] = useState(false);
   const inputRef = useRef(null);
 
+  // Create preview URL
   useEffect(() => {
     if (!file) {
       setPreview(null);
@@ -21,6 +22,14 @@ export default function PrescriptionUpload() {
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  const resetAll = () => {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    setView("json");
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   const onFile = (f) => f && setFile(f);
   const handleFileChange = (e) => onFile(e.target.files?.[0]);
@@ -50,21 +59,6 @@ export default function PrescriptionUpload() {
       alert("Failed to upload or process prescription. Please try again.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!result) return alert("No result to save!");
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/saveResult",
-        result,
-        { headers: { "Content-Type": "application/json" } }
-      );
-      if (res.data.success) alert("Result saved successfully!");
-    } catch (err) {
-      console.error("Save error:", err);
-      alert("Failed to save OCR result.");
     }
   };
 
@@ -134,6 +128,7 @@ export default function PrescriptionUpload() {
         <div className="content">
           <div className="brand">MedScan</div>
 
+          {/* Upload UI */}
           {!result && !loading && (
             <>
               <div className="d-flex justify-content-center">
@@ -143,11 +138,6 @@ export default function PrescriptionUpload() {
                   onDragOver={handleDragOver}
                   onClick={() => inputRef.current?.click()}
                   role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (["Enter", " "].includes(e.key))
-                      inputRef.current?.click();
-                  }}
                 >
                   <input
                     ref={inputRef}
@@ -192,28 +182,26 @@ export default function PrescriptionUpload() {
               </div>
 
               <div className="d-flex justify-content-center mt-4">
-                <button
-                  className="btn btn-primary px-4"
-                  onClick={handleUpload}
-                >
+                <button className="btn btn-primary px-4" onClick={handleUpload}>
                   Submit
                 </button>
               </div>
             </>
           )}
 
+          {/* Loading */}
           {loading && (
             <div className="d-flex justify-content-center my-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <div className="spinner-border text-primary" />
             </div>
           )}
 
+          {/* Result UI */}
           {result && (
             <div className="result-box mt-4">
               <div className="d-flex justify-content-between mb-2 align-items-center">
                 <div>
+                  {/* JSON */}
                   <i
                     className={`bi bi-braces mx-2 ${
                       view === "json" ? "text-primary" : ""
@@ -222,6 +210,8 @@ export default function PrescriptionUpload() {
                     title="JSON"
                     onClick={() => setView("json")}
                   />
+
+                  {/* Table */}
                   <i
                     className={`bi bi-table mx-2 ${
                       view === "table" ? "text-primary" : ""
@@ -230,6 +220,8 @@ export default function PrescriptionUpload() {
                     title="Table"
                     onClick={() => setView("table")}
                   />
+
+                  {/* SQL */}
                   <i
                     className={`bi bi-database mx-2 ${
                       view === "sql" ? "text-primary" : ""
@@ -238,6 +230,8 @@ export default function PrescriptionUpload() {
                     title="SQL"
                     onClick={() => setView("sql")}
                   />
+
+                  {/* Mongo */}
                   <span
                     className={`mongo-icon mx-2 ${
                       view === "mongo" ? "text-primary" : ""
@@ -246,19 +240,25 @@ export default function PrescriptionUpload() {
                     title="MongoDB"
                     onClick={() => setView("mongo")}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
+                    {/* MongoDB icon */}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 0C7 0 4 3 4 3s1 6 8 9c7-3 8-9 8-9s-3-3-8-3zM12 12c-5-2-6-7-6-7s2 1 6 1 6-1 6-1-1 5-6 7z" />
                     </svg>
                   </span>
+
+                  {/* NEW — IMAGE ICON */}
+                  <i
+                    className={`bi bi-image mx-2 ${
+                      view === "image" ? "text-primary" : ""
+                    }`}
+                    role="button"
+                    title="View Uploaded Image"
+                    onClick={() => setView("image")}
+                  />
                 </div>
 
                 <div>
+                  {/* Copy Button */}
                   <button
                     className={`btn btn-sm btn-outline-secondary me-2 ${
                       copied ? "btn-success" : ""
@@ -267,17 +267,21 @@ export default function PrescriptionUpload() {
                   >
                     {copied ? "Copied!" : "Copy"}
                   </button>
+
+                  {/* NEW — CLEAR BUTTON */}
                   <button
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={handleSave}
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={resetAll}
                   >
-                    Save
+                    Clear
                   </button>
                 </div>
               </div>
 
               <pre className="output-box">
                 {view === "json" && JSON.stringify(result, null, 2)}
+
+                {/* Table View */}
                 {view === "table" && result.medicines?.length > 0 && (
                   <table className="table table-bordered">
                     <thead>
@@ -298,6 +302,7 @@ export default function PrescriptionUpload() {
                     </tbody>
                   </table>
                 )}
+
                 {view === "sql" &&
                   result.medicines
                     ?.map(
@@ -305,6 +310,7 @@ export default function PrescriptionUpload() {
                         `INSERT INTO prescriptions (name, dose, freq) VALUES ('${m.name}', '${m.dose}', '${m.freq}');`
                     )
                     .join("\n")}
+
                 {view === "mongo" &&
                   result.medicines
                     ?.map(
@@ -312,6 +318,16 @@ export default function PrescriptionUpload() {
                         `db.prescriptions.insertOne({ name: "${m.name}", dose: "${m.dose}", freq: "${m.freq}" });`
                     )
                     .join("\n")}
+
+                {/* NEW — IMAGE VIEW */}
+                {view === "image" && preview && (
+                  <img
+                    src={preview}
+                    alt="Uploaded preview"
+                    className="img-fluid mt-2 rounded"
+                    style={{ maxHeight: "450px" }}
+                  />
+                )}
               </pre>
             </div>
           )}

@@ -54,7 +54,14 @@ const Navbar = () => {
 
             {/* About Page */}
             <li className="nav-item ms-3">
-              <Link className="nav-link" to="/about">
+              <Link className="nav-link" 
+              href="#about-section"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("about-section")?.scrollIntoView({
+                  behavior: "smooth",
+                });
+              }}>
                 About
               </Link>
             </li>

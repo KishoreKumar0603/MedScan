@@ -1,9 +1,11 @@
 import "../assets/css/HowItWorks.css";
-// HowItWorks.jsx
-// React (JavaScript) + Bootstrap 5 implementation matching the UI screenshot
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+
+import upload from "../assets/images/upload.png";
+import AiProcessing from "../assets/images/AiProcessing.png";
+import jsonOutput from "../assets/images/json.png";
 
 const HowItWorks = () => {
   const steps = [
@@ -13,7 +15,7 @@ const HowItWorks = () => {
       title: "Upload Documents",
       description:
         "Simply upload your medical documents - prescriptions, test results, patient forms, or any handwritten medical records through our secure platform.",
-      image: "https://via.placeholder.com/360x140?text=Upload+Document",
+      image: upload,
       colorClass: "step-blue",
     },
     {
@@ -22,7 +24,7 @@ const HowItWorks = () => {
       title: "AI Processing",
       description:
         "Our advanced OCR and NLP algorithms analyze the documents, extracting patient information, medications, dosages, and other critical medical data with 99% accuracy.",
-      image: "https://via.placeholder.com/360x140?text=AI+Processing",
+      image: AiProcessing,
       colorClass: "step-green",
     },
     {
@@ -31,7 +33,7 @@ const HowItWorks = () => {
       title: "Get Structured Data",
       description:
         "Receive clean, structured JSON data ready for integration with your existing healthcare systems, EHRs, or databases. Complete with patient details, medications, and dosages.",
-      image: "https://via.placeholder.com/360x140?text=JSON+Output",
+      image: jsonOutput,
       colorClass: "step-orange",
     },
   ];

@@ -1,101 +1,37 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-from PIL import Image
-import torch
-import io
-import numpy as np
-import re
-import pytesseract
+# app.py
+from flask import Flask, request, jsonify
+from ocr.paddle_ocr_engine import MedScanOCR
+from nlp.scispacy_engine import MedScanNLP
+from utils.json_formatter import format_medscan_output
+import os
+from flask_cors import CORS
 
-app = FastAPI(title="MedScan Prescription OCR")
+app = Flask(__name__)
+CORS(app)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+ocr_engine = MedScanOCR()
+nlp_engine = MedScanNLP()
 
-ocr_model_name = "microsoft/trocr-base-handwritten"  # stable
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+@app.route("/api/upload-prescription", methods=["POST"])
+def upload_prescription():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-@app.on_event("startup")
-async def load_model():
-    global processor, model
-    try:
-        print("Loading OCR model from local cache...")
-        processor = TrOCRProcessor.from_pretrained(ocr_model_name, local_files_only=True)
-        model = VisionEncoderDecoderModel.from_pretrained(ocr_model_name, local_files_only=True)
-        model.to(device)
-        print(f"✅ TrOCR model loaded on {device}")
-    except Exception as e:
-        print("❌ Failed to load model locally:", e)
-        raise RuntimeError(
-            "Model not found in local cache. Please download it first."
-        )
+    file = request.files["file"]
 
-def preprocess_image(pil_image: Image.Image) -> Image.Image:
-    return pil_image.resize((384, 384))
+    os.makedirs("uploads", exist_ok=True)
+    filepath = os.path.join("uploads", file.filename)
+    file.save(filepath)
 
-def extract_prescription_info(ocr_text: str):
-    lines = ocr_text.splitlines()
-    patient_name = None
-    medicines = []
+    raw_text = ocr_engine.extract_text(filepath)
 
-    for line in lines:
-        clean_line = line.strip()
-        if any(c.isalpha() for c in clean_line):
-            patient_name = clean_line
-            break
+    entities = nlp_engine.extract_entities(raw_text)
+    medicines = nlp_engine.clean_prescription(raw_text)
 
-    med_pattern = r"([A-Za-z0-9\-]+)\s+(\d+\s*(?:mg|ml|g))(\s*[0-9x/]+)?"
-    for line in lines:
-        match = re.search(med_pattern, line)
-        if match:
-            name = match.group(1)
-            dosage = match.group(2)
-            frequency = match.group(3).strip() if match.group(3) else None
-            medicines.append({"name": name, "dosage": dosage, "frequency": frequency})
+    response = format_medscan_output(raw_text, entities, medicines)
 
-    return patient_name, medicines
+    return jsonify(response), 200
 
-@app.post("/ocr")
-async def ocr_image(file: UploadFile = File(...)):
-    contents = await file.read()
-    try:
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Could not read uploaded file as an image")
 
-    image = preprocess_image(image)
-
-    try:
-        pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(device)
-        with torch.no_grad():
-            generated_ids = model.generate(pixel_values, max_length=64)
-            raw_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        if not raw_text.strip():
-            raise ValueError("TrOCR returned empty text")
-        print("✅ OCR successful using TrOCR")
-    except Exception as e:
-        print(f"⚠️ TrOCR failed: {e}, falling back to Tesseract OCR")
-        try:
-            raw_text = pytesseract.image_to_string(np.array(image))
-            if not raw_text.strip():
-                raise ValueError("Tesseract returned empty text")
-            print("✅ OCR successful using Tesseract")
-        except Exception as e2:
-            raise HTTPException(status_code=500, detail=f"OCR failed: {e2}")
-
-    patient_name, medicines = extract_prescription_info(raw_text)
-
-    return {
-        "patient_name": patient_name,
-        "medicines": medicines,
-        "raw_text": raw_text
-    }
-
-@app.get("/")
-def home():
-    return {"message": "✅ MedScan Prescription OCR API is running"}
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
